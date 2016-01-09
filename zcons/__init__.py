@@ -34,11 +34,14 @@ import zetup
 zetup.toplevel(__name__, ['scons'])
 # __call__=lambda *args, **options: scons(*args, **options)
 
+from distutils.errors import DistutilsError
 from setuptools.dist import Distribution
 from pkg_resources import get_distribution, working_set, \
     DistributionNotFound, VersionConflict
 
 from path import Path
+
+from .error import ZConsResolveSConsError
 
 
 def resolve_scons():
@@ -56,7 +59,10 @@ def resolve_scons():
     try:
         dist = get_distribution('SCons')
     except (DistributionNotFound, VersionConflict):
-        dist = Distribution().fetch_build_egg('SCons')
+        try:
+            dist = Distribution().fetch_build_egg('SCons')
+        except DistutilsError as exc:
+            raise ZConsResolveSConsError(reason=exc)
         sys.path.insert(0, Path(dist.location) / 'scons-%s' % dist.version)
         working_set.entries.insert(0, dist.location)
         working_set.by_key[dist.key] = dist
