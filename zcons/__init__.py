@@ -57,10 +57,10 @@ def resolve_scons():
 
     print("Resolving SCons...")
     try:
-        dist = get_distribution('SCons')
+        dist = get_distribution('SCons < 2.5')
     except (DistributionNotFound, VersionConflict):
         try:
-            dist = Distribution().fetch_build_egg('SCons')
+            dist = Distribution().fetch_build_egg('SCons < 2.5')
         except DistutilsError as exc:
             raise ZConsResolveSConsError(reason=exc)
         sys.path.insert(0, Path(dist.location) / 'scons-%s' % dist.version)
