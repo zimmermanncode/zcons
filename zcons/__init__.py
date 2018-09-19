@@ -17,13 +17,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with ZCons. If not, see <http://www.gnu.org/licenses/>.
 
-"""zcons
-
+"""
 Zimmermann's SCons wrapper.
 
-- Checks availability of SCons and, if not found,
-  implicitly installs SCons as local Python egg.
-- Defines :func:`zetup.scons` for running SCons sub-processes.
+Checks availability of SCons and, if not found, implicitly installs SCons as
+local Python egg.
+
+Defines :func:`zetup.scons` for running SCons sub-processes
 
 .. moduleauthor:: Stefan Zimmermann <zimmermann.code@gmail.com>
 """
@@ -31,7 +31,11 @@ import sys
 
 import zetup
 
-zetup.toplevel(__name__, ['scons'])
+zetup.toplevel(__name__, [
+    'Environment',
+    'ZConsError', 'ZConsSConsError', 'ZConsResolveSConsError',
+    'scons',
+])
 # __call__=lambda *args, **options: scons(*args, **options)
 
 from distutils.errors import DistutilsError
@@ -41,7 +45,7 @@ from pkg_resources import get_distribution, working_set, \
 
 from path import Path
 
-from .error import ZConsResolveSConsError
+from .error import ZConsError, ZConsSConsError, ZConsResolveSConsError
 
 
 def resolve_scons():
@@ -57,37 +61,74 @@ def resolve_scons():
 
     print("Resolving SCons...")
     try:
-        dist = get_distribution('SCons < 2.5')
+        dist = get_distribution('SCons >= 3.0')
     except (DistributionNotFound, VersionConflict):
         try:
-            dist = Distribution().fetch_build_egg('SCons < 2.5')
+            dist = Distribution().fetch_build_egg('SCons >= 3.0')
         except DistutilsError as exc:
             raise ZConsResolveSConsError(reason=exc)
-        sys.path.insert(0, Path(dist.location) / 'scons-%s' % dist.version)
         working_set.entries.insert(0, dist.location)
         working_set.by_key[dist.key] = dist
+    pkgroot = Path(dist.location) / ('scons-%s' % dist.version)
+    if not pkgroot.exists():
+        raise ZConsResolveSConsError(reason=(
+            "SCons package root does not exist: {}".format(pkgroot)))
+    sys.path.insert(0, str(pkgroot))
     print(repr(dist))
+    print("SCons package root: {}".format(pkgroot))
 
     sys.stdout = sys.__stdout__ = stdout
     return dist
 
-resolve_scons()
+
+SCONS = resolve_scons()
+
+
+from SCons.Environment import Environment
 
 
 def scons(*args, **options):
-    """Run SCons as separate sub-process through ``sys.executable``
-       with the given command line `args` and process `options`.
+    """
+    Run SCons as separate sub-process through ``sys.executable``.
 
-    - All `options` starting with upper case letters
-      are used as SCons variables by appendeding to `args`.
-    - See :func:`zetup.call` and :func:`subprocess.call`
-      for info about general `options`.
+    :param args:
+       SCons command line arguments
+    :param options:
+       SCons variables and keyword arguments for ``zetup.call``
+
+    All `options` starting with upper case letters are used as SCons variables
+    and appended to `args`
+
+    See ``zetup.call`` and ``subprocess.call`` for info about general
+    `options`
     """
     args = list(args)
     for name in list(options):
         if name[0].isupper():
             args.append('%s=%s' % (name, options.pop(name)))
+    if zetup.call(
+            [sys.executable, '-c',
+             "__import__('SCons.Script').Script.main()"] +
+            args, **options):
+        raise ZConsSConsError(args=args)
 
-    zetup.call([
-        sys.executable, '-c', "import SCons.Script; SCons.Script.main()"
-    ] + args, **options)
+
+def scons_debug(*args, **options):
+    """
+    Run SCons with ``--debug=pdb``.
+
+    See :func:`zcons.scons` for info about arguments and the sub-process
+    """
+    args = list(args)
+    for name in list(options):
+        if name[0].isupper():
+            args.append('%s=%s' % (name, options.pop(name)))
+    if zetup.call(
+            [sys.executable, '-c',
+             "__import__('SCons.Script').Script.main()",
+             "--debug=pdb"] +
+            args, **options):
+        raise ZConsSConsError(args=args)
+
+
+scons.debug = scons_debug
