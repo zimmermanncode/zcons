@@ -63,7 +63,7 @@ test_script:
         }
 
   - ps: |
-        python -c @"
+        & $env:PY -c @"
         import os
 
         import zcons
