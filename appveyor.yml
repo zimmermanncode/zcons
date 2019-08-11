@@ -58,8 +58,8 @@ install:
 
 test_script:
   - ps: |
-        if (-not $env:SCONS ) {
-            & $env:PY -m pip install "$env:SCONS"
+        if ($env:SCONS) {
+            & $env:PY -m pip install $env:SCONS
         }
 
   - ps: |
@@ -80,7 +80,7 @@ test_script:
                 ) >= '3.0.3')
 
         else:
-            assert SCONS == "SCons==3.0.1"
+            assert SCONS == 'SCons==3.0.1'
             assert (
                 __import__('zetup.version').version.Version(
                     SCons.__version__
