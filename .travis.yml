@@ -1,0 +1,53 @@
+sudo: false
+git:
+  depth: false
+
+language: python
+python:
+  - '2.7'
+  - '3.5'
+  - '3.6'
+  - pypy
+env:
+  - SCONS=Scons==3.0.1
+  - SCONS=
+
+install:
+  - pip install -U pip setuptools six
+  - pip install -U -e .
+  - pip install tox tox-travis
+
+script:
+  - |
+        if [ ! -z "$SCONS"] ; then
+            pip install "$SCONS"
+        ; fi
+
+        python -c "
+        import zcons
+        import SCons
+
+        assert zcons.SCONS.version == SCons.__version__
+
+        if not os.environ.get('SCONS'):
+            assert(
+                __import__('zetup.version').version.Version(
+                    SCons.__version__
+                ) >= '3.0.3'
+        "
+
+  - tox -r -v
+
+  - pip install zetup[all]
+  - zetup install
+  # - zetup pytest
+  - zetup sdist
+  - zetup tox
+
+deploy:
+  provider: pypi
+  user: userzimmermann
+  password:
+    secure: PSaF0STaBBt/rxcLymNEl1VlVQZ4SrNmdJRbhRZv9fiazTv2BYWGXK1N0qB1kGokpHzuDj3Jkboi50QrsuQxeRZ8NIhyT8tbOqGi9ZB1eLEOQGbsiceadA1O1fzo99/rE9HDKL7BHVDqJ9F60nd2vQXzCFsz0emy2tGteA5/MQ4tjP+uAq2KEzh4olO9Sc7IkEBwnbI9c9GaCYvq8jDfPUPzLuO+HlR6ZMlv8FOu9BT11OfhumNICfSe5T6sYa+i7F7oVSk+xxz0nr0MQEMjTwDi46fLkIF/vJukC9OfC4N6xTEP6pdIj7K4u3VlFcF+ZyCetI7zSj1k6Ki5m9gc38Tz+5hzHf/UjEoUXkJ91zbOFeCAKfUnoTPJf+P1EKkoNdLb1y95b6bY2D7rov2qpGHpofiUg5ACjQ+wnZcwRzGBkJHCR4oWHA4E1/dVBdAR7TZVw7a89XNVV3jgcgPtjA60MiEmsQ9pQibw00zk7/l1g8zKv+VRqzb1JlxDqwlEi7XN2V9xi4KJHGQRj3Xk6QInF0b6d7u3kq/lmAfUm64oiS23KfaxpjsLuDQL205cR8Th8c5/q3meear1iCk+7z5qS+noSCW2YfEqKKOUV+omfYAva2+xTtr4kSqt7ei6bC/A+MnOz1eMrtQitZpd8k/LjOLlKGnsDPPWdvZx+kw=
+  on:
+    python: '2.7'
