@@ -35,7 +35,7 @@ script:
     assert zcons.SCONS.version == SCons.__version__
 
     SCONS = os.environ.get('SCONS')
-    if SCONS is None:
+    if not SCONS:
         assert (
             __import__('zetup.version').version.Version(
                 SCons.__version__
