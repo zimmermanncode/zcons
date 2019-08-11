@@ -57,10 +57,10 @@ install:
         rem %PY% -m pip install -U tox
 
 test_script:
-  - ps: |
-        if ($env:SCONS) {
-            & $env:PY -m pip install $env:SCONS
-        }
+  - cmd: |
+        if not "%SCONS%" == "" (
+            %PY% -m pip install "%SCONS%"
+        )
 
   - ps: |
         & $env:PY -c @"
