@@ -6,90 +6,16 @@
 
 from __future__ import print_function
 
-import sys
-import os
-import re
+from setuptools import setup
+
+
+dist = None
 try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+    dist = setup(
+        setup_requires=["zetup >= 0.2.58"],
 
-
-SETUP_REQUIRES = [
-    'zetup >= 0.2.45',
-]
-
-
-try:
-    from setuptools.dist import Distribution
-    from pkg_resources import get_distribution, working_set, \
-      DistributionNotFound, VersionConflict
-except ImportError: # no setuptools
-    pass
-else:
-    # Make sure that setup requirements are always correctly resolved and
-    # accessible by:
-    # - Recursively resolving their runtime requirements
-    # - Moving any installed eggs to the front of sys.path
-    # - Updating pkg_resources.working_set accordingly
-
-    installer = Distribution().fetch_build_egg
-
-    # don't pollute stdout. first backup
-    __stdout__ = sys.__stdout__
-    stdout = sys.stdout
-    # then redirect to stderr...
-
-    class StdErrWrapper(object):
-        # on windows, directly assigning stderr to stdout
-        # often leads to a detached stderr buffer in the end
-
-        def __getattr__(self, name):
-            return getattr(sys.__stderr__, name)
-
-        def detach(self):
-            # so don't let stderr's buffer get stolen
-            return self
-
-        def __del__(self):
-            # and also don't let __getattr__ fetch stderr's __del__
-            pass
-
-    sys.stdout = sys.__stdout__ = StdErrWrapper()
-
-    def resolve(requirements, parent=None):
-        for req in requirements:
-            qualreq = parent and '%s->%s' % (req, parent) or req
-            print("Resolving setup requirement %s:" % qualreq)
-            try:
-                dist = get_distribution(req)
-                print(repr(dist))
-            except (DistributionNotFound, VersionConflict):
-                dist = installer(req)
-                sys.path.insert(0, dist.location)
-                working_set.add_entry(dist.location)
-            extras = re.match(r'[^#\[]*\[([^#\]]*)\]', req)
-            if extras:
-                extras = list(map(str.strip, extras.group(1).split(',')))
-            resolve((str(req).split(';')[0]
-                     for req in dist.requires(extras=extras or ())),
-                    qualreq)
-
-    resolve(SETUP_REQUIRES)
-    zfg = __import__('zetup').Zetup()
-
-    resolve(str(req).split(';')[0] for req in zfg.SETUP_REQUIRES or [])
-
-    sys.__stdout__ = __stdout__
-    sys.stdout = stdout
-
-
-dist = zfg.setup(
-    setup_requires=SETUP_REQUIRES + [
-        str(req) for req in zfg.SETUP_REQUIRES or ()],
-
-    use_zetup=True,
-)
-
-
-del dist.zetup_made
+        use_zetup=True,
+    )
+finally:
+    if dist is not None and hasattr(dist, 'zetup_made'):
+        dist.zetup_made.clean()
