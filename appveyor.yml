@@ -59,7 +59,7 @@ install:
 test_script:
   - ps: |
         if (-not $env:SCONS ) {
-            $env:PY -m pip install "$env:SCONS"
+            & $env:PY -m pip install "$env:SCONS"
         }
 
   - ps: |
