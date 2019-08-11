@@ -30,6 +30,11 @@ Defines :func:`zetup.scons` for running SCons sub-processes
 import sys
 
 import zetup
+from zetup.version import Version
+from path import Path
+from pkg_resources import get_distribution
+
+from .error import ZConsError, ZConsSConsError, ZConsResolveSConsError
 
 zetup.toplevel(__name__, [
     'Environment',
@@ -38,53 +43,33 @@ zetup.toplevel(__name__, [
 ])
 # __call__=lambda *args, **options: scons(*args, **options)
 
-from distutils.errors import DistutilsError
-from setuptools.dist import Distribution
-from pkg_resources import get_distribution, working_set, \
-    DistributionNotFound, VersionConflict
 
-from path import Path
+REQUIRES_SCONS = "SCons >=  3.0.0"
 
-from .error import ZConsError, ZConsSConsError, ZConsResolveSConsError
+zetup.resolve([REQUIRES_SCONS])
 
+SCONS = get_distribution(REQUIRES_SCONS)
 
-def resolve_scons():
-    # called below
-    """Check for installed SCons and install as local egg if not found.
+SCONS_ROOT = Path(SCONS.location) / ("scons")
+if Version(SCONS.version) < '3.0.3':
+    SCONS_ROOT += "-%s" % SCONS.version
 
-    - Automatically called on ``import zcons``.
-    - Returns :class:`pkg_resources.Distribution` instance for SCons.
-    """
-    # don't pollute stdout with SCons installation output
-    stdout = sys.__stdout__
-    sys.stdout = sys.__stdout__ = sys.__stderr__
+if not SCONS_ROOT.exists():
+    raise ZConsResolveSConsError(reason=(
+        "SCons package root does not exist: {}".format(SCONS_ROOT)))
 
-    print("Resolving SCons...")
-    try:
-        dist = get_distribution('SCons >= 3.0')
-    except (DistributionNotFound, VersionConflict):
-        try:
-            dist = Distribution().fetch_build_egg('SCons >= 3.0')
-        except DistutilsError as exc:
-            raise ZConsResolveSConsError(reason=exc)
-        working_set.entries.insert(0, dist.location)
-        working_set.by_key[dist.key] = dist
-    pkgroot = Path(dist.location) / ('scons-%s' % dist.version)
-    if not pkgroot.exists():
-        raise ZConsResolveSConsError(reason=(
-            "SCons package root does not exist: {}".format(pkgroot)))
-    sys.path.insert(0, str(pkgroot))
-    print(repr(dist))
-    print("SCons package root: {}".format(pkgroot))
+sys.path.insert(0, str(SCONS_ROOT))
 
-    sys.stdout = sys.__stdout__ = stdout
-    return dist
+import SCons  # pylint: disable=import-error
 
+if SCons.__version__ != SCONS.version:
+    raise ZConsResolveSConsError(reason=(
+        "SCons.__version__ {} doesn't match {!r}"
+        .format(SCons.__version__, SCONS)))
 
-SCONS = resolve_scons()
+print("SCons package root: {}".format(SCONS_ROOT))
 
-
-from SCons.Environment import Environment
+from SCons.Environment import Environment  # pylint: disable=import-error
 
 
 def scons(*args, **options):
@@ -92,9 +77,9 @@ def scons(*args, **options):
     Run SCons as separate sub-process through ``sys.executable``.
 
     :param args:
-       SCons command line arguments
+        SCons command line arguments
     :param options:
-       SCons variables and keyword arguments for ``zetup.call``
+        SCons variables and keyword arguments for ``zetup.call``
 
     All `options` starting with upper case letters are used as SCons variables
     and appended to `args`
@@ -106,10 +91,10 @@ def scons(*args, **options):
     for name in list(options):
         if name[0].isupper():
             args.append('%s=%s' % (name, options.pop(name)))
-    if zetup.call(
-            [sys.executable, '-c',
-             "__import__('SCons.Script').Script.main()"] +
-            args, **options):
+
+    if zetup.call([
+            sys.executable, '-c', "__import__('SCons.Script').Script.main()"
+    ] + args, **options):
         raise ZConsSConsError(args=args)
 
 
@@ -123,11 +108,12 @@ def scons_debug(*args, **options):
     for name in list(options):
         if name[0].isupper():
             args.append('%s=%s' % (name, options.pop(name)))
-    if zetup.call(
-            [sys.executable, '-c',
-             "__import__('SCons.Script').Script.main()",
-             "--debug=pdb"] +
-            args, **options):
+
+    if zetup.call([
+            sys.executable, '-c',
+            "__import__('SCons.Script').Script.main()",
+            "--debug=pdb"
+    ] + args, **options):
         raise ZConsSConsError(args=args)
 
 
