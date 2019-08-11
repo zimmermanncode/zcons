@@ -84,7 +84,7 @@ test_script:
                     SCons.__version__
                 ) == '3.0.1')
         "@
-        & $env:PY -c "$test"
+        & $env:PY -c "$test" 2>&1 | Write-Host
 
   - cmd: |
         rem %PY% -m tox -r -v
