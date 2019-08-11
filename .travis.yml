@@ -22,6 +22,7 @@ script:
     if [ ! -z "$SCONS"] ; then
         pip install "$SCONS"
     fi
+
   - |
     python -c "$(cat << EOF
     import zcons
@@ -33,7 +34,7 @@ script:
         assert(
             __import__('zetup.version').version.Version(
                 SCons.__version__
-            ) >= '3.0.3'
+            ) >= '3.0.3')
     EOF
     )"
 
