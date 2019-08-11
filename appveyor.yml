@@ -58,9 +58,7 @@ install:
 
 test_script:
   - cmd: |
-        if defined SCONS (
-            %PY% -m pip install %SCONS%
-        )
+        if defined SCONS ( %PY% -m pip install %SCONS% )
 
   - ps: |
         & $env:PY -c @"
