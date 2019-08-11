@@ -61,7 +61,7 @@ test_script:
         if defined SCONS ( %PY% -m pip install %SCONS% )
 
   - ps: |
-        & $env:PY -c @"
+        $test = @"
         import os
 
         import zcons
@@ -84,6 +84,7 @@ test_script:
                     SCons.__version__
                 ) == '3.0.1')
         "@
+        & $env:PY -c "$test"
 
   - cmd: |
         rem %PY% -m tox -r -v
