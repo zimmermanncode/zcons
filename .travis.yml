@@ -20,7 +20,7 @@ install:
 
 script:
   - |
-    if [ ! -z "$SCONS"] ; then
+    if [ ! -z "$SCONS" ] ; then
         pip install "$SCONS"
     fi
 
