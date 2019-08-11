@@ -53,6 +53,7 @@ script:
 
   - tox -r -v
 
+  - pip uninstall --yes zcons
   - pip install zetup[all]
   - zetup install
   # - zetup pytest
