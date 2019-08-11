@@ -66,3 +66,5 @@ deploy:
     secure: PSaF0STaBBt/rxcLymNEl1VlVQZ4SrNmdJRbhRZv9fiazTv2BYWGXK1N0qB1kGokpHzuDj3Jkboi50QrsuQxeRZ8NIhyT8tbOqGi9ZB1eLEOQGbsiceadA1O1fzo99/rE9HDKL7BHVDqJ9F60nd2vQXzCFsz0emy2tGteA5/MQ4tjP+uAq2KEzh4olO9Sc7IkEBwnbI9c9GaCYvq8jDfPUPzLuO+HlR6ZMlv8FOu9BT11OfhumNICfSe5T6sYa+i7F7oVSk+xxz0nr0MQEMjTwDi46fLkIF/vJukC9OfC4N6xTEP6pdIj7K4u3VlFcF+ZyCetI7zSj1k6Ki5m9gc38Tz+5hzHf/UjEoUXkJ91zbOFeCAKfUnoTPJf+P1EKkoNdLb1y95b6bY2D7rov2qpGHpofiUg5ACjQ+wnZcwRzGBkJHCR4oWHA4E1/dVBdAR7TZVw7a89XNVV3jgcgPtjA60MiEmsQ9pQibw00zk7/l1g8zKv+VRqzb1JlxDqwlEi7XN2V9xi4KJHGQRj3Xk6QInF0b6d7u3kq/lmAfUm64oiS23KfaxpjsLuDQL205cR8Th8c5/q3meear1iCk+7z5qS+noSCW2YfEqKKOUV+omfYAva2+xTtr4kSqt7ei6bC/A+MnOz1eMrtQitZpd8k/LjOLlKGnsDPPWdvZx+kw=
   on:
     python: '3.5'
+    condition: >
+        -z "$SCONS"
