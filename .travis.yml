@@ -19,22 +19,22 @@ install:
 
 script:
   - |
-        if [ ! -z "$SCONS"] ; then
-            pip install "$SCONS"
-        ; fi
+    if [ ! -z "$SCONS"] ; then
+        pip install "$SCONS"
+    ; fi
+  - |
+    python -c "$(cat << EOF
+    import zcons
+    import SCons
 
-        python -c "
-        import zcons
-        import SCons
+    assert zcons.SCONS.version == SCons.__version__
 
-        assert zcons.SCONS.version == SCons.__version__
-
-        if not os.environ.get('SCONS'):
-            assert(
-                __import__('zetup.version').version.Version(
-                    SCons.__version__
-                ) >= '3.0.3'
-        "
+    if not os.environ.get('SCONS'):
+        assert(
+            __import__('zetup.version').version.Version(
+                SCons.__version__
+            ) >= '3.0.3'
+    EOF)"
 
   - tox -r -v
 
