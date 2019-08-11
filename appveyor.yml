@@ -52,7 +52,7 @@ build: off
 
 install:
   - cmd: |
-        %PY% -m pip install -U pip setuptools six
+        %PY% -m pip install -U pip setuptools six wheel
         %PY% -m pip install -U -e .
         rem %PY% -m pip install -U tox
 
