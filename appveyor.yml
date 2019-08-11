@@ -83,8 +83,10 @@ test_script:
                 __import__('zetup.version').version.Version(
                     SCons.__version__
                 ) == '3.0.1')
+
         "@
-        & $env:PY -c "$test" 2>&1 | Write-Host
+        $test | Out-File test-script.py -Encoding utf8
+        & cmd /c "%PY% test-script.py 2>&1"
 
   - cmd: |
         rem %PY% -m tox -r -v
